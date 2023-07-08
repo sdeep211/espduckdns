@@ -5,6 +5,10 @@ copyright (c) Davide Gironi, 2016
 
 Released under GPLv3.
 Please refer to LICENSE file for licensing information.
+
+***
+Fixed error with http.begin and newer libraries
+***
 */
 
 //main ESP8266 Arduino library
@@ -24,6 +28,11 @@ Please refer to LICENSE file for licensing information.
 //Ticker library
 #include <Ticker.h>
 //interface SDK library
+
+
+HTTPClient http;  //declared as per https://stackoverflow.com/questions/74501723/compilation-error-call-to-httpclientbegin-declared-with-attribute-error-ob
+WiFiClient client; //as above
+
 extern "C" {
   #include "user_interface.h"
 }
@@ -161,6 +170,7 @@ void pageHome() {
   //write page
   server.send(200, "text/html", content);
 }
+
 
 //emit page settings
 void pageSettings() {
@@ -411,8 +421,8 @@ int ddnsUpdate() {
   //send the request, retry on error
   int updateretries = 0;
   do {
-    HTTPClient http;
-    http.begin(getrequest);
+    
+    http.begin(client, getrequest); //line changed from http.begin(getrequest); and now includes in globals HTTPClient http; WiFiClient client;
     int httpCode = http.GET();
     if(httpCode == HTTP_CODE_OK) {
       String payload = http.getString();
@@ -450,7 +460,7 @@ int ddnsUpdate() {
 void setup() {  
 #if defined SERIAL_ENABLED
   //initialize Serial
-  Serial.begin(115200);
+  Serial.begin(9600);
   delay(500);
   Serial.println("Starting...");
 #endif
